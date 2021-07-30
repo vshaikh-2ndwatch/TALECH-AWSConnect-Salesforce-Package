@@ -1,7 +1,7 @@
 # Transcribe State Machine
 resource "aws_sfn_state_machine" "transcribe_state_machine" {
   name     = "sfTranscribeStateMachine"
-  role_arn = data.aws_iam_role.transcribe_state_machine.arn
+  role_arn = local.transcribe_state_machine_role_arn
 
   definition = <<EOF
     {
@@ -91,7 +91,7 @@ EOF
 # Real Time Queue Metrics Loop Job State Machine
 resource "aws_sfn_state_machine" "realtime_queue_metrics_loop_job_state_machine" {
   name     = "sfRealTimeQueueMetricsLoopJobStateMachine"
-  role_arn = data.aws_iam_role.realtime_queue_metrics_loop_job_state_machine.arn
+  role_arn = local.realtime_queue_metrics_loop_job_state_machine_role_arn
 
   definition = <<EOF
     {

@@ -38,7 +38,7 @@ variable "SalesforceHost" {
   description = "Your Salesforce Host. Please make sure the host url starts with \"https\"."
 
   validation {
-    condition     = can(regex("https(.*)", var.SalesforceHost))
+    condition     = can(regex("^$|^https(.*)", var.SalesforceHost))
     error_message = "Please make sure the host url starts with \"https\"."
   }
 }

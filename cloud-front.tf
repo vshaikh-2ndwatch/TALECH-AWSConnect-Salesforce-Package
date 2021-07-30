@@ -1,6 +1,6 @@
 resource "aws_cloudfront_distribution" "audio_recording_streaming_distribution" {
   #sfAudioRecordingStreamingCloudFrontDistribution
-  count = local.PostcallRecordingImportEnabledCondition ? 1 : 0
+  count = local.sfAudioRecordingStreamingCloudFrontDistributionCondition ? 1 : 0
 
   enabled         = true
   is_ipv6_enabled = true

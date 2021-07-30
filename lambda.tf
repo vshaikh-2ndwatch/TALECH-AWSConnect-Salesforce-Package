@@ -1,37 +1,12 @@
 #Lambda layer
-
-locals {
-  build_directory_path                = "${path.module}/build"
-  lambda_site_packages_layer_path     = "${path.module}/lambda_layers/python/lib/python3.8/site-packages"
-  lambda_site_packages_layer_zip_name = "${local.build_directory_path}/sitepackages.zip"
-}
-
-resource "null_resource" "lambda_python_layer" {
-  provisioner "local-exec" {
-    working_dir = "${local.lambda_site_packages_layer_path}/"
-    command     = "pip3 install -r python_requirements.txt "
-  }
-
-  #triggers = {
-  #    rerun_every_time = "${uuid()}"
-  #}
-}
-
-data "archive_file" "lambda_site_packages_layer_package" {
-  type        = "zip"
-  source_dir  = local.lambda_site_packages_layer_path
-  output_path = local.lambda_site_packages_layer_zip_name
-
-  depends_on = [null_resource.lambda_python_layer]
-}
-
 resource "aws_lambda_layer_version" "sf_lambda_layer" {
   layer_name          = "sfLambdaLayer"
   description         = "Salesforce Lambda function external dependencies"
-  filename            = local.lambda_site_packages_layer_zip_name
-  source_code_hash    = data.archive_file.lambda_site_packages_layer_package.output_base64sha256
+  filename            = local.lambda_layer_zip
+  source_code_hash    = "${filebase64sha256(local.lambda_layer_zip)}"
   compatible_runtimes = [local.LambdaRuntime]
 }
+
 
 #Lambda Event Source Mapping
 resource "aws_lambda_event_source_mapping" "ctr_event_source_mapping" {
@@ -59,7 +34,7 @@ resource "aws_lambda_function" "invoke_api_lambda" {
   handler          = "sfInvokeAPI.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.lambda_basic_exec.arn
+  role             = local.lambda_basic_exec_role_arn
 
   vpc_config {
     subnet_ids         = local.LambdaSubnetIds
@@ -79,6 +54,42 @@ resource "aws_lambda_function" "invoke_api_lambda" {
   }
 }
 
+#Execute AWS Service Lambda
+data "archive_file" "execute_aws_service_lambda_package" {
+  type        = "zip"
+  source_file = "${path.module}/lambda_functions/sfExecuteAWSService.py"
+  output_path = "/tmp/execute_aws_service_lambda_package_zip.zip"
+}
+
+resource "aws_lambda_function" "execute_aws_service_lambda" {
+  function_name    = "sfExecuteAWSService"
+  filename         = data.archive_file.execute_aws_service_lambda_package.output_path
+  source_code_hash = data.archive_file.execute_aws_service_lambda_package.output_base64sha256
+  handler          = "sfExecuteAWSService.lambda_handler"
+  runtime          = local.LambdaRuntime
+  role             = local.execute_aws_service_role_arn
+  timeout          = 10
+  
+  vpc_config {
+    subnet_ids         = local.LambdaSubnetIds
+    security_group_ids = local.LambdaSecurityGroupIds
+  }
+
+  environment {
+    variables = {
+      GENERATE_AUDIO_RECORDING_LAMBDA   = local.sfAudioRecordingStreamingCloudFrontDistributionCondition ? aws_lambda_function.generate_audio_recording_streaming_url_lambda[0].arn : null
+      CLOUDFORMATION_STACK_ID           = ""
+      CLOUDFORMATION_STACK_NAME         = ""
+      LOGGING_LEVEL                     = var.LambdaLoggingLevel
+      CLOUDFRONT_DISTRIBUTION_ID        = local.sfAudioRecordingStreamingCloudFrontDistributionCondition ? data.aws_cloudfront_distribution.audio_recording_streaming_distribution[0].id : null
+      RECORDING_BUCKET_NAME             = var.ConnectRecordingS3BucketName
+      SF_ADAPTER_NAMESPACE              = var.SalesforceAdapterNamespace
+      SF_HOST                           = var.SalesforceHost
+      SIG4_LAMBDA_ROLE_ARN              = local.PostcallRecordingImportEnabledCondition ? local.sig4_request_to_s3_role_arn : null
+    }
+  }
+}
+
 # RealTime Queue Metrics Lambda
 data "archive_file" "realtime_queue_metrics_lambda_package" {
   type        = "zip"
@@ -93,7 +104,7 @@ resource "aws_lambda_function" "realtime_queue_metrics_lambda" {
   handler          = "sfRealTimeQueueMetrics.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.realtime_queue_metrics.arn
+  role             = local.realtime_queue_metrics_role_arn
   timeout          = 900
 
   vpc_config {
@@ -131,8 +142,8 @@ resource "aws_lambda_function" "realtime_queue_metrics_loop_job_lambda" {
   handler          = "sfRealTimeQueueMetricsLoopJob.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.realtime_queue_metrics_loop_job.arn
-  timeout          = 900
+  role             = local.realtime_queue_metrics_loop_job_role_arn
+  timeout          = 10
 
   environment {
     variables = {
@@ -157,7 +168,7 @@ resource "aws_lambda_function" "contacttrace_record_lambda" {
   handler          = "sfContactTraceRecord.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.lambda_basic_exec.arn
+  role             = local.lambda_basic_exec_role_arn
   timeout          = 30
 
   vpc_config {
@@ -192,7 +203,7 @@ resource "aws_lambda_function" "interval_agent_lambda" {
   handler          = "sfIntervalAgent.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.lambda_basic_exec_s3read.arn
+  role             = local.lambda_basic_exec_s3read_role_arn
   timeout          = 60
 
   vpc_config {
@@ -227,7 +238,7 @@ resource "aws_lambda_function" "interval_queue_lambda" {
   handler          = "sfIntervalQueue.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.lambda_basic_exec_s3read.arn
+  role             = local.lambda_basic_exec_s3read_role_arn
   timeout          = 60
 
   vpc_config {
@@ -262,7 +273,7 @@ resource "aws_lambda_function" "get_transcibe_job_status_lambda" {
   handler          = "sfGetTranscribeJobStatus.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.get_transcribe_job_status.arn
+  role             = local.get_transcribe_job_status_role_arn
   timeout          = 10
 
   environment {
@@ -286,7 +297,7 @@ resource "aws_lambda_function" "submit_transcibe_job_lambda" {
   handler          = "sfSubmitTranscribeJob.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.submit_transcribe_job.arn
+  role             = local.submit_transcribe_job_role_arn
   timeout          = 10
 
   environment {
@@ -310,7 +321,7 @@ resource "aws_lambda_function" "process_transcription_result_lambda" {
   handler          = "sfProcessTranscriptionResult.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.process_transcription_result.arn
+  role             = local.process_transcription_result_role_arn
   timeout          = 60
 
   environment {
@@ -336,7 +347,7 @@ resource "aws_lambda_function" "process_contact_lens_lambda" {
   handler          = "sfProcessContactLens.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.process_contactlens.arn
+  role             = local.process_contactlens_role_arn
   timeout          = 60
 
   environment {
@@ -359,14 +370,14 @@ data "archive_file" "generate_audio_recording_streaming_url_lambda_package" {
 }
 
 resource "aws_lambda_function" "generate_audio_recording_streaming_url_lambda" {
-  count            = local.PostcallRecordingImportEnabledCondition ? 1 : 0
+  count            = local.sfAudioRecordingStreamingCloudFrontDistributionCondition ? 1 : 0
   function_name    = "sfGenerateAudioRecordingStreamingURL"
   filename         = data.archive_file.generate_audio_recording_streaming_url_lambda_package.output_path
   source_code_hash = data.archive_file.generate_audio_recording_streaming_url_lambda_package.output_base64sha256
   handler          = "sfGenerateAudioRecordingStreamingURL.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.lambda_basic_exec.arn
+  role             = local.lambda_basic_exec_role_arn
   timeout          = 10
 
   environment {
@@ -393,7 +404,7 @@ resource "aws_lambda_function" "execute_transcription_state_machine_lambda" {
   handler          = "sfExecuteTranscriptionStateMachine.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.execute_transcription_state_machine.arn
+  role             = local.execute_transcription_state_machine_role_arn
   timeout          = 120
 
   environment {
@@ -424,7 +435,7 @@ resource "aws_lambda_function" "ctr_trigger_lambda" {
   handler          = "sfCTRTrigger.lambda_handler"
   runtime          = local.LambdaRuntime
   layers           = [aws_lambda_layer_version.sf_lambda_layer.arn]
-  role             = data.aws_iam_role.ctr_trigger.arn
+  role             = local.ctr_trigger_role_arn
   timeout          = 20
 
   environment {
