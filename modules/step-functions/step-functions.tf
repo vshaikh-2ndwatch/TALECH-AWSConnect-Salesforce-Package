@@ -1,7 +1,7 @@
 # Transcribe State Machine
 resource "aws_sfn_state_machine" "transcribe_state_machine" {
   name     = "sfTranscribeStateMachine"
-  role_arn = local.transcribe_state_machine_role_arn
+  role_arn = var.transcribe_state_machine_role_arn
 
   definition = <<EOF
     {
@@ -10,7 +10,7 @@ resource "aws_sfn_state_machine" "transcribe_state_machine" {
         "States": {
             "Submit Transcription Job": {
                 "Type": "Task",
-                "Resource": "${data.aws_lambda_function.submit_transcibe_job_lambda.arn}",
+                "Resource": "${var.submit_transcibe_job_lambda_arn}",
                 "ResultPath": "$.TranscriptionJob",
                     "Next": "Wait X Seconds",
                     "Retry": [
@@ -31,7 +31,7 @@ resource "aws_sfn_state_machine" "transcribe_state_machine" {
             },
             "Get Transcription Job Status": {
                 "Type": "Task",
-                "Resource": "${data.aws_lambda_function.get_transcibe_job_status_lambda.arn}",
+                "Resource": "${var.get_transcibe_job_status_lambda_arn}",
                 "Next": "Job Complete?",
                 "InputPath": "$.TranscriptionJob",
                 "ResultPath": "$.TranscriptionJob",
@@ -69,7 +69,7 @@ resource "aws_sfn_state_machine" "transcribe_state_machine" {
             },
             "Process Transcription Result": {
                 "Type": "Task",
-                "Resource": "${data.aws_lambda_function.process_transcription_result_lambda.arn}", 
+                "Resource": "${var.process_transcription_result_lambda_arn}", 
                 "InputPath": "$",
                 "End": true,
                 "Retry": [
@@ -91,7 +91,7 @@ EOF
 # Real Time Queue Metrics Loop Job State Machine
 resource "aws_sfn_state_machine" "realtime_queue_metrics_loop_job_state_machine" {
   name     = "sfRealTimeQueueMetricsLoopJobStateMachine"
-  role_arn = local.realtime_queue_metrics_loop_job_state_machine_role_arn
+  role_arn = var.realtime_queue_metrics_loop_job_state_machine_role_arn
 
   definition = <<EOF
     {
@@ -109,7 +109,7 @@ resource "aws_sfn_state_machine" "realtime_queue_metrics_loop_job_state_machine"
             },
             "Iterator": {
                 "Type": "Task",
-                "Resource": "${data.aws_lambda_function.realtime_queue_metrics_loop_job_lambda.arn}", 
+                "Resource": "${var.realtime_queue_metrics_loop_job_lambda_arn}", 
                 "ResultPath": "$.iterator",
                 "Next": "IsCountReached"
             },

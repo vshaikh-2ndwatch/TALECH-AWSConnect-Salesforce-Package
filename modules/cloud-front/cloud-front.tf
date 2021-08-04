@@ -1,6 +1,6 @@
 resource "aws_cloudfront_distribution" "audio_recording_streaming_distribution" {
   #sfAudioRecordingStreamingCloudFrontDistribution
-  count = local.sfAudioRecordingStreamingCloudFrontDistributionCondition ? 1 : 0
+  count = var.sfAudioRecordingStreamingCloudFrontDistributionCondition ? 1 : 0
 
   enabled         = true
   is_ipv6_enabled = true
@@ -18,7 +18,7 @@ resource "aws_cloudfront_distribution" "audio_recording_streaming_distribution" 
   }
 
   origin {
-    domain_name = "${var.ConnectRecordingS3BucketName}.s3.${data.aws_region.current.name}.amazonaws.com"
+    domain_name = "${var.ConnectRecordingS3BucketName}.s3.${var.region}.amazonaws.com"
     origin_id   = "AudioRecordingStreamingCloudFrontOrigin"
     custom_origin_config {
       http_port              = 80  #Note: Added to avoid terraform error.It may not be required parameter
