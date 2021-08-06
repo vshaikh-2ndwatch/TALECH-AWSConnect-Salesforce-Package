@@ -25,7 +25,7 @@ ContactLensImportEnabled         = true
 PostcallRecordingImportEnabled   = false # true
 PostcallCTRImportEnabled         = true
 
-AmazonConnectInstanceId = "i-1234567890abcdef0"
+AmazonConnectInstanceId = "i-abcdefghji"
 
 ConnectReportingS3BucketName = "testreportingbucket"
 ConnectRecordingS3BucketName = "" # "testrecordingbucket"

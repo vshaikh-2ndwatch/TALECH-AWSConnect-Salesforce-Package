@@ -46,7 +46,7 @@ locals {
 
   #CloudFront Distribution Module
   module "ac_salesforce_cloudfront" {
-    source = "../modules/cloud-front"
+    source = "../../modules/cloud-front"
     region = var.region
     sfAudioRecordingStreamingCloudFrontDistributionCondition = local.sfAudioRecordingStreamingCloudFrontDistributionCondition
     ConnectRecordingS3BucketName = var.ConnectRecordingS3BucketName
@@ -56,9 +56,9 @@ locals {
 
   #Lambda Module
   module "ac_salesforce_lambdas" {
-    source = "../modules/lambda"
+    source = "../../modules/lambda"
 
-    lambda_layer_zip = "../lambda_functions/lambda_layers.zip"
+    lambda_layer_zip = "../src/lambda_functions/lambda_layers.zip"
     runtime = var.runtime
 
     CTREventSourceMappingCondition = local.CTREventSourceMappingCondition
@@ -107,7 +107,7 @@ locals {
 
   #Step Functions State Machine Module
   module "ac_salesforce_step_functions_state_machine" {
-    source = "../modules/step-functions"
+    source = "../../modules/step-functions"
     transcribe_state_machine_role_arn = local.transcribe_state_machine_role_arn
     submit_transcibe_job_lambda_arn = module.ac_salesforce_lambdas.submit_transcibe_job_lambda_arn
     get_transcibe_job_status_lambda_arn = module.ac_salesforce_lambdas.get_transcibe_job_status_lambda_arn
@@ -118,7 +118,7 @@ locals {
 
   #Event Rule Module
   module "ac_salesforce_events_rule" {
-    source = "../modules/events-rule"
+    source = "../../modules/events-rule"
     realtime_queue_metrics_loop_job_state_machine_arn = "arn:aws:states:${var.region}:${var.account_id}:stateMachine:${local.realtime_queue_metrics_loop_job_state_machine_name}"
     realtime_queue_metrics_cron_execution_role_arn = local.realtime_queue_metrics_cron_execution_role_arn
     RealtimeReportingImportEnabledCondition = local.RealtimeReportingImportEnabledCondition

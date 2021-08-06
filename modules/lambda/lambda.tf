@@ -23,7 +23,7 @@ resource "aws_lambda_event_source_mapping" "ctr_event_source_mapping" {
 #Invoke API Lambda
 data "archive_file" "invoke_api_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfInvokeAPI.py"
+  source_file = "../../src/lambda_functions/sfInvokeAPI.py"
   output_path = "/tmp/invoke_api_lambda_package_zip.zip"
 }
 
@@ -57,7 +57,7 @@ resource "aws_lambda_function" "invoke_api_lambda" {
 #Execute AWS Service Lambda
 data "archive_file" "execute_aws_service_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfExecuteAWSService.py"
+  source_file = "../../src/lambda_functions/sfExecuteAWSService.py"
   output_path = "/tmp/execute_aws_service_lambda_package_zip.zip"
 }
 
@@ -93,7 +93,7 @@ resource "aws_lambda_function" "execute_aws_service_lambda" {
 # RealTime Queue Metrics Lambda
 data "archive_file" "realtime_queue_metrics_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfRealTimeQueueMetrics.py"
+  source_file = "../../src/lambda_functions/sfRealTimeQueueMetrics.py"
   output_path = "/tmp/realtime_queue_metrics_lambda_package_zip.zip"
 }
 
@@ -131,7 +131,7 @@ resource "aws_lambda_function" "realtime_queue_metrics_lambda" {
 # RealTime Queue Metrics Loop Job Lambda
 data "archive_file" "realtime_queue_metrics_loop_job_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfRealTimeQueueMetricsLoopJob.py"
+  source_file = "../../src/lambda_functions/sfRealTimeQueueMetricsLoopJob.py"
   output_path = "/tmp/realtime_queue_metrics_loop_job_lambda_package_zip.zip"
 }
 
@@ -157,7 +157,7 @@ resource "aws_lambda_function" "realtime_queue_metrics_loop_job_lambda" {
 # Contact Trace Record Lambda
 data "archive_file" "contacttrace_record_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfContactTraceRecord.py"
+  source_file = "../../src/lambda_functions/sfContactTraceRecord.py"
   output_path = "/tmp/contacttrace_record_lambda_package_zip.zip"
 }
 
@@ -192,7 +192,7 @@ resource "aws_lambda_function" "contacttrace_record_lambda" {
 # Interval Agent Lambda
 data "archive_file" "interval_agent_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfIntervalAgent.py"
+  source_file = "../../src/lambda_functions/sfIntervalAgent.py"
   output_path = "/tmp/interval_agent_lambda_package_zip.zip"
 }
 
@@ -227,7 +227,7 @@ resource "aws_lambda_function" "interval_agent_lambda" {
 # Interval Queue Lambda
 data "archive_file" "interval_queue_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfIntervalQueue.py"
+  source_file = "../../src/lambda_functions/sfIntervalQueue.py"
   output_path = "/tmp/interval_queue_lambda_package_zip.zip"
 }
 
@@ -262,7 +262,7 @@ resource "aws_lambda_function" "interval_queue_lambda" {
 # Get Transcribe Job Status Lambda
 data "archive_file" "get_transcibe_job_status_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfGetTranscribeJobStatus.py"
+  source_file = "../../src/lambda_functions/sfGetTranscribeJobStatus.py"
   output_path = "/tmp/get_transcibe_job_status_lambda_package_zip.zip"
 }
 
@@ -286,7 +286,7 @@ resource "aws_lambda_function" "get_transcibe_job_status_lambda" {
 # Submit Transcribe Job Lambda
 data "archive_file" "submit_transcibe_job_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfSubmitTranscribeJob.py"
+  source_file = "../../src/lambda_functions/sfSubmitTranscribeJob.py"
   output_path = "/tmp/submit_transcibe_job_lambda_package_zip.zip"
 }
 
@@ -310,7 +310,7 @@ resource "aws_lambda_function" "submit_transcibe_job_lambda" {
 # Process Transcription Result Lambda
 data "archive_file" "process_transcription_result_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfProcessTranscriptionResult.py"
+  source_file = "../../src/lambda_functions/sfProcessTranscriptionResult.py"
   output_path = "/tmp/process_transcription_result_lambda_package_zip.zip"
 }
 
@@ -336,7 +336,7 @@ resource "aws_lambda_function" "process_transcription_result_lambda" {
 # Process Contact Lens Lambda
 data "archive_file" "process_contact_lens_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfProcessContactLens.py"
+  source_file = "../../src/lambda_functions/sfProcessContactLens.py"
   output_path = "/tmp/process_contact_lens_lambda_package_zip.zip"
 }
 
@@ -365,7 +365,7 @@ resource "aws_lambda_function" "process_contact_lens_lambda" {
 # Generate Audio Recording Streaming URL Lambda
 data "archive_file" "generate_audio_recording_streaming_url_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfGenerateAudioRecordingStreamingURL.py"
+  source_file = "../../src/lambda_functions/sfGenerateAudioRecordingStreamingURL.py"
   output_path = "/tmp/generate_audio_recording_streaming_url_lambda_package_zip.zip"
 }
 
@@ -393,7 +393,7 @@ resource "aws_lambda_function" "generate_audio_recording_streaming_url_lambda" {
 # Execute Transcription State Machine Lambda
 data "archive_file" "execute_transcription_state_machine_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfExecuteTranscriptionStateMachine.py"
+  source_file = "../../src/lambda_functions/sfExecuteTranscriptionStateMachine.py"
   output_path = "/tmp/execute_transcription_state_machine_lambda_package_zip.zip"
 }
 
@@ -424,7 +424,7 @@ resource "aws_lambda_function" "execute_transcription_state_machine_lambda" {
 # CTR Trigger Lambda
 data "archive_file" "ctr_trigger_lambda_package" {
   type        = "zip"
-  source_file = "../lambda_functions/sfCTRTrigger.py"
+  source_file = "../../src/lambda_functions/sfCTRTrigger.py"
   output_path = "/tmp/ctr_trigger_lambda_package_zip.zip"
 }
 
